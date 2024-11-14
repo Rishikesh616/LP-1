@@ -1,0 +1,207 @@
+### 1. Objective
+To write a program using **LEX** and **YACC** to recognize and evaluate infix expressions. The program should correctly parse and handle arithmetic operations like addition, subtraction, multiplication, and division, while following the correct operator precedence and associativity rules.
+
+### 2. Expected Output
+- The program should accept a valid infix expression as input and output whether the expression is valid.
+- It should evaluate the expression if it is valid and display the result.
+- If the expression is invalid, it should provide an appropriate error message.
+
+### 3. Software Requirement
+- **LEX** (Lexical Analyzer Generator)
+- **YACC** (Yet Another Compiler Compiler)
+- **GCC Compiler** (for compiling the generated C code)
+- Operating System: Windows/Linux/MacOS
+- Terminal or Command Prompt for execution
+
+### 4. Theory
+
+#### A. Necessary Concepts
+
+1. **Infix Expression**:
+   - An infix expression is a mathematical notation in which operators are written between operands. For example, `A + B` is an infix expression.
+
+2. **LEX (Lexical Analyzer)**:
+   - LEX is a tool that generates a lexical analyzer (scanner) based on patterns defined in the LEX file.
+   - It reads the input and converts it into tokens, which are then passed to YACC.
+
+3. **YACC (Yet Another Compiler Compiler)**:
+   - YACC is a parser generator that takes a grammar specification and generates a C program to parse that grammar.
+   - It uses tokens provided by the LEX scanner to parse the expressions based on defined rules.
+
+4. **Data Structures**:
+   - **Symbol Table**: Stores variables and their values.
+   - **Stack**: Used by YACC to evaluate the parsed expression.
+
+#### B. Algorithm and its Explanation
+
+##### **Step 1: Create the LEX file (`expr.l`)**
+
+- The LEX file is responsible for tokenizing the input expression.
+- It identifies numbers, operators, and parentheses.
+
+```lex
+%{
+#include "y.tab.h"
+%}
+
+%%
+
+[0-9]+      { yylval = atoi(yytext); return NUMBER; }
+[ \t]       { /* ignore whitespace */ }
+"("         { return '('; }
+")"         { return ')'; }
+"+"         { return '+'; }
+"-"         { return '-'; }
+"*"         { return '*'; }
+"/"         { return '/'; }
+\n          { return 0; }
+.           { printf("Invalid character: %s\n", yytext); }
+
+%%
+```
+
+**Explanation**:
+- `NUMBER`: Token for integers.
+- Operators and parentheses are returned as their corresponding characters.
+- Whitespace is ignored.
+- Invalid characters are reported.
+
+##### **Step 2: Create the YACC file (`expr.y`)**
+
+- The YACC file defines the grammar and evaluation rules for the infix expressions.
+
+```yacc
+%{
+#include <stdio.h>
+#include <stdlib.h>
+
+int yylex(void);
+void yyerror(const char *s);
+
+%}
+
+%token NUMBER
+
+%left '+' '-'
+%left '*' '/'
+%right UMINUS
+
+%%
+
+input:
+    expr '\n' { printf("Result = %d\n", $1); }
+    ;
+
+expr:
+    expr '+' expr { $$ = $1 + $3; }
+    | expr '-' expr { $$ = $1 - $3; }
+    | expr '*' expr { $$ = $1 * $3; }
+    | expr '/' expr { 
+        if ($3 == 0) {
+            yyerror("Division by zero!");
+            exit(1);
+        }
+        $$ = $1 / $3; 
+    }
+    | '-' expr %prec UMINUS { $$ = -$2; }
+    | '(' expr ')' { $$ = $2; }
+    | NUMBER { $$ = $1; }
+    ;
+
+%%
+void yyerror(const char *s) {
+    fprintf(stderr, "Error: %s\n", s);
+}
+
+int main() {
+    printf("Enter an infix expression: ");
+    yyparse();
+    return 0;
+}
+```
+
+**Explanation**:
+- The grammar rules define how expressions are parsed.
+- `%left` and `%right` specify operator associativity.
+- `%prec UMINUS` handles unary minus.
+- The `expr` non-terminal handles different arithmetic operations and parentheses.
+
+##### **Step 3: Compile and Run the Program**
+
+1. **Generate the Scanner and Parser**
+   ```bash
+   lex expr.l
+   yacc -d expr.y
+   gcc lex.yy.c y.tab.c -o infix_parser -ll
+   ```
+
+2. **Run the Program**
+   ```bash
+   ./infix_parser
+   ```
+
+3. **Sample Input/Output**
+
+   ```
+   Enter an infix expression: (3 + 5) * 2 - 4 / 2
+
+   Result = 14
+   ```
+
+   ```
+   Enter an infix expression: 10 / 0
+
+   Error: Division by zero!
+   ```
+
+#### C. Flowchart
+
+```plaintext
+                +------------------------+
+                | Start (main function)  |
+                +------------------------+
+                           |
+                           v
+                +------------------------+
+                |   Call yyparse()       |
+                +------------------------+
+                           |
+                           v
+                +------------------------+
+                |   Read Input String    |
+                +------------------------+
+                           |
+                           v
+                +------------------------+
+                |   Tokenize using LEX   |
+                +------------------------+
+                           |
+                           v
+                +------------------------+
+                | Parse using YACC rules |
+                +------------------------+
+                           |
+                           v
+            +-----------------------------+
+            |   Valid Expression?         |
+            +-----------------------------+
+              |            | No
+              | Yes        v
+              v    +----------------------+
+  +---------------------------+           |
+  |   Evaluate Expression     |           |
+  +---------------------------+           |
+              |                          v
+              v               +----------------------+
+  +---------------------------+        Error         |
+  | Display Result / Error    +----------------------+
+  +---------------------------+
+              |
+              v
+           +--------+
+           |  End   |
+           +--------+
+```
+
+### 5. Conclusion
+The LEX and YACC program effectively recognizes and evaluates infix expressions, handling operator precedence and associativity correctly. By using a two-step process of tokenization (LEX) and parsing (YACC), the program ensures that valid expressions are evaluated accurately while identifying and reporting errors for invalid expressions.

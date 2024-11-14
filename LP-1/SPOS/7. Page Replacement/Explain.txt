@@ -1,0 +1,291 @@
+### 1. Objective
+The objective of this program is to simulate a **Page Replacement Algorithm** to manage the contents of a fixed-size page table. The program will implement **Optimal Page Replacement**, **FIFO (First-In, First-Out)**, and **LRU (Least Recently Used)** page replacement algorithms.
+
+### 2. Expected Output
+For each page replacement algorithm, the program should:
+- Output the state of the page table after each page request.
+- Display the number of page faults that occurred during the simulation.
+- Show the final state of the page table.
+
+### 3. Software Requirement
+- **Operating System**: Windows/Linux/MacOS
+- **Compiler**: GCC (for C programs)
+- **Libraries**: `stdio.h`, `stdlib.h`
+
+### 4. Theory
+
+#### A. Necessary Concepts
+
+1. **Page Replacement Algorithms**:
+   - **Optimal Page Replacement**: This algorithm replaces the page that will not be used for the longest time in the future. It is theoretical and not practical but offers the minimum page faults.
+   - **FIFO (First-In, First-Out)**: The oldest page in memory is replaced when a new page is referenced, regardless of how often or when it will be used.
+   - **LRU (Least Recently Used)**: The page that has not been used for the longest period is replaced when a new page is needed.
+
+2. **Page Fault**:
+   - A page fault occurs when a requested page is not in memory, prompting the operating system to load it into memory, potentially evicting another page.
+
+3. **Page Table**:
+   - A page table is used to track which pages are currently in memory.
+
+4. **Frame Size**:
+   - The frame size determines how many pages can be stored in memory.
+
+#### B. Algorithm and Explanation
+
+### **Algorithm 1: FIFO (First-In, First-Out)**
+1. Maintain a queue for the frames, which stores the pages in the order they were added.
+2. When a new page is referenced:
+   - If it is not in memory, a page fault occurs.
+   - If there is space, add the page.
+   - If the memory is full, remove the oldest page (from the front of the queue) and add the new page at the back.
+   
+### **Algorithm 2: Optimal Page Replacement**
+1. For each page reference, look ahead to find the page that will not be used for the longest period.
+2. If a page fault occurs, select the page that is farthest in the future to replace.
+
+### **Algorithm 3: LRU (Least Recently Used)**
+1. Maintain a list of pages in memory, tracking their last accessed time.
+2. When a page is referenced:
+   - If it is already in memory, update its access time.
+   - If it is not in memory, page fault occurs, and the least recently used page is replaced.
+
+#### C. Flowchart
+
+```plaintext
++----------------------+
+|     Start (main)     |
++----------------------+
+           |
+           v
++----------------------+
+| Initialize Frames and|
+| Page Requests       |
++----------------------+
+           |
+           v
++----------------------+
+| Choose Algorithm (FIFO|
+| Optimal or LRU)      |
++----------------------+
+           |
+           v
++----------------------+
+| Implement Chosen     |
+| Page Replacement     |
+| Algorithm            |
++----------------------+
+           |
+           v
++----------------------+
+| Display Results      |
+| (Page Fault Count)   |
++----------------------+
+           |
+           v
+       +------+
+       | End  |
+       +------+
+```
+
+### 5. Code Implementation
+
+#### C Program to Simulate Page Replacement Algorithms
+
+```c
+#include <stdio.h>
+#include <stdlib.h>
+
+#define MAX_PAGES 10
+#define MAX_FRAMES 4
+
+// Function to implement FIFO Page Replacement algorithm
+int fifo(int pages[], int num_pages, int frames[], int num_frames) {
+    int page_faults = 0;
+    int frame_index = 0;
+    
+    for (int i = 0; i < num_pages; i++) {
+        int found = 0;
+        
+        // Check if page is already in memory
+        for (int j = 0; j < num_frames; j++) {
+            if (pages[i] == frames[j]) {
+                found = 1;
+                break;
+            }
+        }
+        
+        // If page is not in memory, page fault occurs
+        if (!found) {
+            frames[frame_index] = pages[i];
+            frame_index = (frame_index + 1) % num_frames;  // Move to next frame
+            page_faults++;
+        }
+        
+        // Display the current state of the frames
+        printf("After reference to page %d: ", pages[i]);
+        for (int j = 0; j < num_frames; j++) {
+            if (frames[j] != -1) {
+                printf("%d ", frames[j]);
+            }
+        }
+        printf("\n");
+    }
+    
+    return page_faults;
+}
+
+// Function to implement Optimal Page Replacement algorithm
+int optimal(int pages[], int num_pages, int frames[], int num_frames) {
+    int page_faults = 0;
+    
+    for (int i = 0; i < num_pages; i++) {
+        int found = 0;
+        
+        // Check if page is already in memory
+        for (int j = 0; j < num_frames; j++) {
+            if (pages[i] == frames[j]) {
+                found = 1;
+                break;
+            }
+        }
+        
+        // If page is not in memory, page fault occurs
+        if (!found) {
+            int farthest = -1, replace_index = -1;
+            
+            // Find the page to replace (farthest in future)
+            for (int j = 0; j < num_frames; j++) {
+                int next_use = -1;
+                
+                for (int k = i + 1; k < num_pages; k++) {
+                    if (frames[j] == pages[k]) {
+                        next_use = k;
+                        break;
+                    }
+                }
+                
+                // If page is not used in the future or is used last, choose it
+                if (next_use == -1) {
+                    replace_index = j;
+                    break;
+                }
+                
+                if (next_use > farthest) {
+                    farthest = next_use;
+                    replace_index = j;
+                }
+            }
+            
+            frames[replace_index] = pages[i];
+            page_faults++;
+        }
+        
+        // Display the current state of the frames
+        printf("After reference to page %d: ", pages[i]);
+        for (int j = 0; j < num_frames; j++) {
+            if (frames[j] != -1) {
+                printf("%d ", frames[j]);
+            }
+        }
+        printf("\n");
+    }
+    
+    return page_faults;
+}
+
+// Function to implement LRU Page Replacement algorithm
+int lru(int pages[], int num_pages, int frames[], int num_frames) {
+    int page_faults = 0;
+    int last_used[MAX_FRAMES] = {0}; // Array to track the last used time of frames
+    
+    for (int i = 0; i < num_pages; i++) {
+        int found = 0;
+        
+        // Check if page is already in memory
+        for (int j = 0; j < num_frames; j++) {
+            if (pages[i] == frames[j]) {
+                found = 1;
+                last_used[j] = i;  // Update the last used time
+                break;
+            }
+        }
+        
+        // If page is not in memory, page fault occurs
+        if (!found) {
+            // Find the least recently used page
+            int lru_index = 0;
+            for (int j = 1; j < num_frames; j++) {
+                if (last_used[j] < last_used[lru_index]) {
+                    lru_index = j;
+                }
+            }
+            
+            frames[lru_index] = pages[i];
+            last_used[lru_index] = i;
+            page_faults++;
+        }
+        
+        // Display the current state of the frames
+        printf("After reference to page %d: ", pages[i]);
+        for (int j = 0; j < num_frames; j++) {
+            if (frames[j] != -1) {
+                printf("%d ", frames[j]);
+            }
+        }
+        printf("\n");
+    }
+    
+    return page_faults;
+}
+
+int main() {
+    int pages[MAX_PAGES], frames[MAX_FRAMES], num_pages, num_frames, choice;
+    
+    // Initialize frame table with -1 (empty)
+    for (int i = 0; i < MAX_FRAMES; i++) {
+        frames[i] = -1;
+    }
+    
+    // Input page reference string
+    printf("Enter number of pages: ");
+    scanf("%d", &num_pages);
+    printf("Enter page reference string: ");
+    for (int i = 0; i < num_pages; i++) {
+        scanf("%d", &pages[i]);
+    }
+    
+    // Input number of frames
+    printf("Enter number of frames: ");
+    scanf("%d", &num_frames);
+    
+    // Display menu and select page replacement algorithm
+    printf("\nChoose Page Replacement Algorithm:\n");
+    printf("1. FIFO\n2. Optimal\n3. LRU\nEnter your choice: ");
+    scanf("%d", &choice);
+    
+    int page_faults = 0;
+    
+    switch(choice) {
+        case 1:
+            page_faults = fifo(pages, num_pages, frames, num_frames);
+            break;
+        case 2:
+            page_faults = optimal
+
+(pages, num_pages, frames, num_frames);
+            break;
+        case 3:
+            page_faults = lru(pages, num_pages, frames, num_frames);
+            break;
+        default:
+            printf("Invalid choice!\n");
+            return 1;
+    }
+    
+    printf("\nTotal Page Faults: %d\n", page_faults);
+    return 0;
+}
+```
+
+### 6. Conclusion
+This program demonstrates the simulation of three popular page replacement algorithms: **FIFO**, **Optimal**, and **LRU**. The algorithms aim to manage memory more efficiently by handling page faults differently. FIFO replaces the oldest page, Optimal predicts the future, and LRU replaces the least recently used page. Each algorithm has its strengths, and their performance depends on the application requirements and the nature of the page reference string. The program also displays the state of the memory frame after each page request, making it easier to understand how each algorithm works.

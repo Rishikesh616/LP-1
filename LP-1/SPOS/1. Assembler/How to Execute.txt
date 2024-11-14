@@ -1,0 +1,9 @@
+1. make a folder, make 3 text files in it named input.asm.txt , pass1.py.txt , pass2.py.txt
+2. copy the codes in the respective text files
+3. copy the path of your folder and replace it to the path in def main() of both pass1 and pass2. remove the first line comment if necessary and save it.
+4. Now rename all the 3 files by removing .txt from them.
+5. click on the folder path once, type cmd and enter. to open cmd on the folder location.
+6. type py --version to check if python available.
+7. type py pass1.py and enter (after this if the folder has new files its working)
+8. type py pass2.py and enter (machine code is the final output)
+ 

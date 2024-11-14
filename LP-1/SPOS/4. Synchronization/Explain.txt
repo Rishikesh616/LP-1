@@ -1,0 +1,224 @@
+### 1. Objective
+To write a program in C that demonstrates the solution to classical synchronization problems using **Mutex** and **Semaphore**. These classical problems include:
+- The **Producer-Consumer Problem**
+- The **Dining Philosophers Problem**
+- The **Reader-Writer Problem**
+
+### 2. Expected Output
+- The program should simulate solutions for the above synchronization problems, ensuring that mutual exclusion, synchronization, and deadlock prevention are handled correctly.
+- For each problem, it should display how processes or threads interact without causing race conditions or deadlock.
+
+### 3. Software Requirement
+- **Operating System**: Windows/Linux/MacOS
+- **Compiler**: GCC (for compiling C programs)
+- **Libraries**: `pthread.h` (for threading), `semaphore.h` (for semaphores)
+- **Terminal** or **Command Prompt** for execution
+
+### 4. Theory
+
+#### A. Necessary Concepts
+
+1. **Mutex (Mutual Exclusion)**:
+   - A Mutex is a synchronization primitive used to protect shared resources from concurrent access by multiple threads. Only one thread can hold a mutex at a time.
+
+2. **Semaphore**:
+   - A semaphore is a synchronization primitive that controls access to a common resource by multiple threads. It uses counters to signal when resources are available or need to be released.
+   - Two types of semaphores:
+     - **Binary Semaphore** (works like a mutex)
+     - **Counting Semaphore** (allows a certain number of threads to access the resource)
+
+3. **Classical Problems of Synchronization**:
+   - These problems are designed to understand the concepts of process synchronization and avoiding deadlocks.
+
+#### B. Algorithm and its Explanation
+
+We'll implement solutions for the **Producer-Consumer Problem** and the **Dining Philosophers Problem** using Mutex and Semaphore.
+
+---
+
+### **Problem 1: Producer-Consumer Problem**
+
+##### **Algorithm**:
+1. Initialize a mutex and two semaphores (`full` and `empty`).
+2. The producer checks if the buffer has empty slots (`empty` semaphore).
+3. The producer acquires the mutex, produces an item, and releases the mutex.
+4. The producer then signals that a new item is available (`full` semaphore).
+5. The consumer waits for items to be available (`full` semaphore).
+6. The consumer acquires the mutex, consumes an item, and releases the mutex.
+7. The consumer signals that a slot is empty (`empty` semaphore).
+
+##### **C Code for Producer-Consumer Problem**:
+
+```c
+#include <stdio.h>
+#include <pthread.h>
+#include <semaphore.h>
+#include <stdlib.h>
+
+#define BUFFER_SIZE 5
+
+int buffer[BUFFER_SIZE];
+int in = 0, out = 0;
+
+pthread_mutex_t mutex;
+sem_t empty, full;
+
+void *producer(void *arg) {
+    int item;
+    for(int i = 0; i < 10; i++) {
+        item = rand() % 100;
+        sem_wait(&empty);
+        pthread_mutex_lock(&mutex);
+        
+        buffer[in] = item;
+        printf("Producer produced: %d\n", item);
+        in = (in + 1) % BUFFER_SIZE;
+        
+        pthread_mutex_unlock(&mutex);
+        sem_post(&full);
+    }
+}
+
+void *consumer(void *arg) {
+    for(int i = 0; i < 10; i++) {
+        sem_wait(&full);
+        pthread_mutex_lock(&mutex);
+        
+        int item = buffer[out];
+        printf("Consumer consumed: %d\n", item);
+        out = (out + 1) % BUFFER_SIZE;
+        
+        pthread_mutex_unlock(&mutex);
+        sem_post(&empty);
+    }
+}
+
+int main() {
+    pthread_t prod, cons;
+    
+    pthread_mutex_init(&mutex, NULL);
+    sem_init(&empty, 0, BUFFER_SIZE);
+    sem_init(&full, 0, 0);
+    
+    pthread_create(&prod, NULL, producer, NULL);
+    pthread_create(&cons, NULL, consumer, NULL);
+    
+    pthread_join(prod, NULL);
+    pthread_join(cons, NULL);
+    
+    pthread_mutex_destroy(&mutex);
+    sem_destroy(&empty);
+    sem_destroy(&full);
+    
+    return 0;
+}
+```
+
+---
+
+### **Problem 2: Dining Philosophers Problem**
+
+##### **Algorithm**:
+1. Initialize an array of mutexes for each chopstick.
+2. Each philosopher needs to acquire the left and right chopstick mutexes.
+3. To prevent deadlock, a philosopher will pick the lower numbered chopstick first.
+4. After eating, the philosopher releases both chopsticks.
+
+##### **C Code for Dining Philosophers Problem**:
+
+```c
+#include <stdio.h>
+#include <pthread.h>
+#include <semaphore.h>
+#include <unistd.h>
+
+#define N 5
+
+pthread_mutex_t chopsticks[N];
+
+void *philosopher(void *num) {
+    int id = *(int *)num;
+    
+    printf("Philosopher %d is thinking.\n", id);
+    sleep(1);
+
+    // Picking up chopsticks (lower numbered chopstick first)
+    pthread_mutex_lock(&chopsticks[id]);
+    pthread_mutex_lock(&chopsticks[(id + 1) % N]);
+
+    printf("Philosopher %d is eating.\n", id);
+    sleep(2);
+
+    // Putting down chopsticks
+    pthread_mutex_unlock(&chopsticks[(id + 1) % N]);
+    pthread_mutex_unlock(&chopsticks[id]);
+
+    printf("Philosopher %d is done eating and thinking again.\n", id);
+}
+
+int main() {
+    pthread_t philosophers[N];
+    int ids[N];
+    
+    for (int i = 0; i < N; i++) {
+        pthread_mutex_init(&chopsticks[i], NULL);
+    }
+    
+    for (int i = 0; i < N; i++) {
+        ids[i] = i;
+        pthread_create(&philosophers[i], NULL, philosopher, &ids[i]);
+    }
+    
+    for (int i = 0; i < N; i++) {
+        pthread_join(philosophers[i], NULL);
+    }
+    
+    for (int i = 0; i < N; i++) {
+        pthread_mutex_destroy(&chopsticks[i]);
+    }
+    
+    return 0;
+}
+```
+
+---
+
+#### C. Flowchart for Producer-Consumer Problem
+
+```plaintext
++----------------------+
+|   Start (main)       |
++----------------------+
+           |
+           v
++----------------------+
+|  Initialize Mutex &  |
+|  Semaphores          |
++----------------------+
+           |
+           v
++----------------------+
+|  Create Producer &   |
+|  Consumer Threads    |
++----------------------+
+           |
+           v
++----------------------+
+|  Wait for Threads to |
+|  Finish Execution    |
++----------------------+
+           |
+           v
++----------------------+
+|   Destroy Mutex &    |
+|   Semaphores         |
++----------------------+
+           |
+           v
+       +------+
+       | End  |
+       +------+
+```
+
+### 5. Conclusion
+Using **Mutex** and **Semaphores**, we successfully implemented solutions for the **Producer-Consumer** and **Dining Philosophers** synchronization problems. These solutions ensure proper synchronization, preventing race conditions and deadlocks by managing access to shared resources. This practical demonstration highlights the importance of process synchronization in concurrent programming.

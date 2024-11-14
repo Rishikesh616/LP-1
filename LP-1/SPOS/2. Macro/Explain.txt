@@ -1,0 +1,165 @@
+### 1. Objective
+To design suitable data structures and implement both Pass-I and Pass-II of a two-pass macro processor. The macro processor should handle macro definitions, macro calls, and generate an intermediate code file in Pass-I, which is then processed in Pass-II to produce the final expanded source code. The outputs of Pass-I include the Macro Name Table (MNT), Macro Definition Table (MDT), and an intermediate code file without any macro definitions.
+
+### 2. Expected Output
+- **Pass-I Output:** 
+  - Macro Name Table (MNT)
+  - Macro Definition Table (MDT)
+  - Intermediate Code File (without macro definitions)
+- **Pass-II Output:** 
+  - Final source code with all macro calls expanded.
+
+### 3. Software Requirement
+- Any C/C++ or Python Compiler (like GCC, Turbo C++, or Python 3.x).
+- Text editor (e.g., Notepad++, Sublime Text).
+- Operating System: Windows/Linux/MacOS.
+
+### 4. Theory
+
+#### A. Necessary Concepts
+
+1. **Macro Processor**: 
+   - A macro processor is a software program that replaces macro calls with their corresponding macro definitions.
+   - **Macros** are reusable code blocks defined using macro directives like `MACRO` and `MEND`.
+
+2. **Two-Pass Macro Processor**:
+   - **Pass-I**:
+     - Identifies macro definitions.
+     - Stores macro names, parameter lists, and the macro body in data structures.
+     - Generates an intermediate code file excluding the macro definitions.
+   - **Pass-II**:
+     - Processes the intermediate code file.
+     - Expands macro calls using the information stored in the Macro Name Table (MNT) and Macro Definition Table (MDT).
+
+3. **Data Structures**:
+   - **Macro Name Table (MNT)**: Stores macro names, along with pointers to their definitions in MDT.
+   - **Macro Definition Table (MDT)**: Stores the actual macro definitions, including the macro body.
+   - **Argument List Array (ALA)**: Used to map actual arguments to formal parameters during macro expansion.
+
+#### B. Algorithm and its Explanation
+
+##### **Pass-I Algorithm:**
+1. **Initialization**:
+   - Open the source code file for reading.
+   - Initialize MNT, MDT, and ALA.
+
+2. **Process Each Line of Source Code**:
+   - **If Directive is `MACRO`**:
+     - Read the macro name and parameters.
+     - Add the macro name to the MNT and start storing the macro definition in MDT.
+   - **If Inside a Macro Definition**:
+     - Store the macro lines in MDT until `MEND` is encountered.
+   - **If Not a Macro Definition**:
+     - Write the line to the intermediate code file.
+
+3. **Update Tables**:
+   - Write the Macro Name Table (MNT) and Macro Definition Table (MDT) to files.
+
+4. **End of Pass-I**:
+   - Close all files.
+
+##### **Pass-II Algorithm:**
+1. **Initialization**:
+   - Open the intermediate code file, MNT, and MDT for reading.
+   - Initialize ALA.
+
+2. **Process Each Line of Intermediate Code**:
+   - **If Line Contains a Macro Call**:
+     - Search for the macro name in MNT.
+     - If found, use the MDT to expand the macro by substituting arguments using ALA.
+   - **If Line is Not a Macro Call**:
+     - Write the line directly to the final source code file.
+
+3. **Generate Final Expanded Code**:
+   - Write all expanded lines to the output file.
+
+4. **End of Pass-II**:
+   - Close all files.
+
+#### C. Flowchart
+
+**Flowchart for Pass-I**:
+
+```plaintext
+                 +--------------------------+
+                 |        Start            |
+                 +--------------------------+
+                            |
+                            v
+              +---------------------------+
+              |  Initialize MNT, MDT, ALA |
+              +---------------------------+
+                            |
+                            v
+        +------------------------------------------+
+        |  Read next line from source code         |
+        +------------------------------------------+
+                            |
+                            v
+        +----------------------------------+
+        | Is Directive MACRO?             |
+        +----------------------------------+
+               | Yes                      | No
+               v                          v
+      +---------------------+    +----------------------+
+      | Add to MNT and MDT  |    | Write to Intermediate|
+      +---------------------+    | Code File            |
+                                  +----------------------+
+                            |
+                            v
+         +------------------------------+
+         | End of Source Code File?     |
+         +------------------------------+
+                  | Yes
+                  v
+       +------------------------------+
+       | Write MNT and MDT to files   |
+       +------------------------------+
+                  |
+                  v
+               +--------+
+               |  End   |
+               +--------+
+```
+
+**Flowchart for Pass-II**:
+
+```plaintext
+                 +--------------------------+
+                 |        Start            |
+                 +--------------------------+
+                            |
+                            v
+              +---------------------------+
+              |  Open Intermediate Files  |
+              +---------------------------+
+                            |
+                            v
+        +------------------------------------------+
+        |  Read next line from Intermediate Code   |
+        +------------------------------------------+
+                            |
+                            v
+             +-------------------------------+
+             | Is Macro Call Found?          |
+             +-------------------------------+
+                  | Yes                      | No
+                  v                          v
+  +----------------------------------+  +----------------------+
+  | Expand using MNT, MDT, ALA       |  | Write to Final Code  |
+  +----------------------------------+  | File Directly        |
+                                         +----------------------+
+                            |
+                            v
+                +-----------------------------+
+                | End of Intermediate Code?   |
+                +-----------------------------+
+                            | Yes
+                            v
+                          +--------+
+                          |  End   |
+                          +--------+
+```
+
+### 5. Conclusion
+The two-pass macro processor effectively handles macro definitions and macro calls, splitting the task into two distinct phases. Pass-I focuses on identifying and storing macros in structured tables (MNT and MDT) while generating an intermediate code file without macros. Pass-II expands macro calls using the data from MNT and MDT, producing the final expanded source code. This two-pass approach simplifies the complexity of macro processing and ensures efficient code generation.

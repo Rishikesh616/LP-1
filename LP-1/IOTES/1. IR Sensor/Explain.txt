@@ -1,0 +1,166 @@
+### 1. Objective
+The objective of this application is to connect an **IR sensor** to a **Raspberry Pi** or **Arduino** board and write a program that detects obstacles. When an obstacle is detected, the program will trigger an **LED** to notify the user. This simple application is intended to illustrate how sensors and actuators can interact in a basic embedded system.
+
+### 2. Expected Output
+- The **IR sensor** will detect the presence of an obstacle.
+- When an obstacle is detected (usually when something crosses the IR beam), the **LED** will turn on.
+- If no obstacle is detected, the **LED** remains off.
+
+### 3. Software Requirement
+- **For Raspberry Pi:**
+  - **Raspberry Pi OS** installed.
+  - **Python** programming language.
+  - **GPIO library** (`RPi.GPIO`) to interact with the GPIO pins.
+  
+- **For Arduino:**
+  - **Arduino IDE**.
+  - **Arduino Uno** or any compatible board.
+  
+- **Hardware**:
+  - **IR Sensor** (typically an IR emitter and receiver pair).
+  - **LED** (with a suitable current-limiting resistor).
+  - **Breadboard and jumper wires**.
+  - **Raspberry Pi** or **Arduino**.
+
+### 4. Theory
+
+#### A. Necessary Concepts
+
+1. **IR Sensor**:
+   - An **IR sensor** typically consists of an IR LED (emitter) and an IR receiver.
+   - The emitter sends out infrared light, and the receiver detects any reflected light.
+   - When an object obstructs the beam between the emitter and receiver, the sensor detects the change and outputs a signal indicating the presence of an obstacle.
+   
+2. **Raspberry Pi GPIO**:
+   - The **Raspberry Pi** has **GPIO pins** that can be used to interact with external devices.
+   - The GPIO pins can be set as input or output and can handle signals like HIGH (on) or LOW (off).
+   
+3. **LED as Output Device**:
+   - An **LED** is connected to the GPIO pin to provide a visual notification.
+   - The LED will be turned on (set to HIGH) when an obstacle is detected and turned off (set to LOW) when there is no obstacle.
+
+4. **Wiring**:
+   - The **IR sensor**'s output is connected to a GPIO input pin.
+   - The **LED** is connected to another GPIO output pin.
+   - The sensor’s **VCC** and **GND** are connected to the power supply and ground, respectively.
+
+#### B. Algorithm and Explanation
+
+### Algorithm:
+1. Initialize the GPIO pins for both the **IR sensor** and the **LED**.
+2. Continuously read the signal from the IR sensor.
+   - If the sensor detects an obstacle (input is HIGH or LOW depending on sensor type), turn on the LED.
+   - If no obstacle is detected, turn off the LED.
+3. Repeat the process to continuously monitor for obstacles.
+
+### C. Flowchart
+
+```plaintext
++------------------------+
+|    Start Application   |
++------------------------+
+           |
+           v
++------------------------+
+| Initialize GPIO pins   |
+| for IR sensor & LED    |
++------------------------+
+           |
+           v
++------------------------+
+| Read IR sensor input   |
++------------------------+
+           |
+           v
++------------------------+
+| Obstacle Detected?     |
++------------------------+
+   |           |
+   v           v
+Turn ON     Turn OFF
+LED         LED
+   |           |
+   v           v
+Repeat the process until user stops
+```
+
+### 5. Code Implementation
+
+#### For **Raspberry Pi** (Python)
+
+1. **Wiring Setup:**
+   - **IR sensor**: Connect the **VCC** to 3.3V, **GND** to ground, and **OUT** to a GPIO input pin (e.g., GPIO17).
+   - **LED**: Connect the **Anode** (long leg) to GPIO pin (e.g., GPIO18), and the **Cathode** (short leg) to ground through a 220Ω resistor.
+
+2. **Python Code for Raspberry Pi**:
+```python
+import RPi.GPIO as GPIO
+import time
+
+# Setup GPIO mode
+GPIO.setmode(GPIO.BCM)
+
+# Define GPIO pins
+IR_SENSOR_PIN = 17  # GPIO pin connected to IR sensor
+LED_PIN = 18        # GPIO pin connected to LED
+
+# Setup the IR sensor pin as input
+GPIO.setup(IR_SENSOR_PIN, GPIO.IN)
+
+# Setup the LED pin as output
+GPIO.setup(LED_PIN, GPIO.OUT)
+
+# Main program loop
+try:
+    while True:
+        # Read the input from the IR sensor
+        if GPIO.input(IR_SENSOR_PIN) == GPIO.HIGH:  # Obstacle detected
+            GPIO.output(LED_PIN, GPIO.HIGH)  # Turn on LED
+            print("Obstacle detected! LED ON.")
+        else:  # No obstacle
+            GPIO.output(LED_PIN, GPIO.LOW)  # Turn off LED
+            print("No obstacle detected. LED OFF.")
+        
+        # Wait a small amount of time before checking again
+        time.sleep(0.1)
+
+# Clean up on exit
+except KeyboardInterrupt:
+    print("Program exited.")
+    GPIO.cleanup()
+```
+
+#### For **Arduino**:
+
+1. **Wiring Setup:**
+   - **IR sensor**: Connect **VCC** to 5V, **GND** to ground, and **OUT** to a digital input pin (e.g., Pin 7).
+   - **LED**: Connect the **Anode** to Pin 13, and **Cathode** to ground through a 220Ω resistor.
+
+2. **Arduino Code**:
+```cpp
+#define IR_SENSOR_PIN 7  // Pin connected to the IR sensor
+#define LED_PIN 13       // Pin connected to the LED
+
+void setup() {
+  pinMode(IR_SENSOR_PIN, INPUT);  // Set IR sensor pin as input
+  pinMode(LED_PIN, OUTPUT);       // Set LED pin as output
+  Serial.begin(9600);             // Start serial communication
+}
+
+void loop() {
+  int sensorValue = digitalRead(IR_SENSOR_PIN);  // Read the IR sensor value
+
+  if (sensorValue == HIGH) {  // Obstacle detected
+    digitalWrite(LED_PIN, HIGH);  // Turn on LED
+    Serial.println("Obstacle detected! LED ON.");
+  } else {  // No obstacle
+    digitalWrite(LED_PIN, LOW);   // Turn off LED
+    Serial.println("No obstacle detected. LED OFF.");
+  }
+
+  delay(100);  // Wait for 100ms
+}
+```
+
+### 6. Conclusion
+This application demonstrates a basic obstacle detection system using an **IR sensor** and an **LED** to notify the user. The **Raspberry Pi** and **Arduino** boards are utilized for reading sensor input and controlling the LED output. The system works by continuously monitoring the IR sensor’s input, and when an obstacle is detected, it activates the LED. This application can be extended to more complex systems like autonomous robots or security systems.

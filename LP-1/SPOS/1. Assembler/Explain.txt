@@ -1,0 +1,159 @@
+### 1. Objective
+To design suitable data structures and implement both Pass-I and Pass-II of a two-pass assembler for a pseudo-machine. The assembler will handle a limited set of instructions from various categories along with some assembler directives. The goal is to generate an intermediate code and symbol table in Pass-I, which will serve as input for Pass-II, resulting in the final machine code.
+
+### 2. Expected Output
+- **Pass-I Output:** Intermediate code file and Symbol Table.
+- **Pass-II Output:** Final Machine Code.
+  
+### 3. Software Requirement
+- Any C/C++ or Python Compiler (like GCC, Turbo C++, or Python 3.x).
+- Text editor (e.g., Notepad++, Sublime Text).
+- Operating System: Windows/Linux/MacOS.
+
+### 4. Theory
+
+#### A. Necessary Concepts
+1. **Assembler**: An assembler is a program that converts assembly language code into machine language code.
+   
+2. **Two-Pass Assembler**: 
+   - **Pass-I**: In the first pass, the assembler reads the source code, generates an intermediate code, and builds the symbol table.
+   - **Pass-II**: The second pass uses the intermediate code and symbol table to generate the final machine code.
+
+3. **Pseudo-Machine Instructions**: A hypothetical set of instructions used for educational purposes, which may include:
+   - **Imperative Instructions**: MOVE, ADD, SUB, MULT, DIV
+   - **Declarative Instructions**: DC (Define Constant), DS (Define Storage)
+   - **Assembler Directives**: START, END, ORIGIN, EQU, LTORG
+
+4. **Symbol Table**: A data structure that stores identifiers (labels, variables) along with their attributes (like address, type).
+
+5. **Literal Table**: A table to store literals found in the source code, with their assigned memory addresses.
+
+6. **Intermediate Code**: A low-level representation of the source code, which acts as input for the second pass.
+
+#### B. Algorithm and its Explanation
+
+##### **Pass-I Algorithm:**
+1. **Initialization**: 
+   - Open the source code file for reading.
+   - Initialize the Location Counter (LC) to the starting address.
+   - Create empty Symbol Table (ST) and Literal Table (LT).
+
+2. **Process Each Line of Source Code**:
+   - **If Directive is `START`**: Set the LC to the specified address.
+   - **If Label is Present**: Add it to the Symbol Table with the current LC value.
+   - **If Declarative Statement (`DS`/`DC`)**: Allocate memory and update LC.
+   - **If Imperative Instruction**: Generate the corresponding intermediate code.
+   - **If Assembler Directive (`EQU`, `ORIGIN`, `LTORG`)**: Handle accordingly and adjust LC.
+
+3. **Generate Intermediate Code**:
+   - Write the processed line to the intermediate code file.
+   - Update the Symbol Table and Literal Table as necessary.
+
+4. **End of Pass-I**:
+   - Write the contents of the Symbol Table and Literal Table to files.
+
+##### **Pass-II Algorithm:**
+1. **Initialization**:
+   - Open the intermediate code, Symbol Table, and Literal Table files.
+   - Prepare for generating final machine code.
+
+2. **Process Intermediate Code**:
+   - **Translate Instructions**: Convert opcodes and operands into machine code using the Symbol Table.
+   - **Handle Literals**: Replace literal references with their corresponding addresses.
+
+3. **Generate Final Machine Code**:
+   - Write each translated instruction to the output machine code file.
+
+4. **End of Pass-II**:
+   - Close all files.
+
+#### C. Flowchart
+
+```plaintext
+                 +--------------------------+
+                 |        Start            |
+                 +--------------------------+
+                            |
+                            v
+              +---------------------------+
+              |  Initialize LC, ST, LT    |
+              +---------------------------+
+                            |
+                            v
+        +------------------------------------------+
+        |  Read next line from source code         |
+        +------------------------------------------+
+                            |
+                            v
+        +----------------------------------+
+        | Is Directive START?              |
+        +----------------------------------+
+                | Yes                      | No
+                v                          v
+       +---------------------+   +---------------------+
+       | Set LC to address   |   | Process Labels,     |
+       +---------------------+   | Instructions,       |
+                                 | Declaratives        |
+                                 +---------------------+
+                                                |
+                                                v
+                               +---------------------------------+
+                               | Write to Intermediate Code file |
+                               +---------------------------------+
+                                                |
+                                                v
+                                  +--------------------------+
+                                  | End of Source Code File? |
+                                  +--------------------------+
+                                           | Yes
+                                           v
+                                +---------------------------+
+                                | Write ST and LT to files  |
+                                +---------------------------+
+                                           |
+                                           v
+                                      +-----------+
+                                      |  End Pass-I|
+                                      +-----------+
+```
+
+**Flowchart for Pass-II**:
+
+```plaintext
+                 +--------------------------+
+                 |        Start            |
+                 +--------------------------+
+                            |
+                            v
+              +---------------------------+
+              |  Open Intermediate Files  |
+              +---------------------------+
+                            |
+                            v
+        +------------------------------------------+
+        |  Read next line from Intermediate Code   |
+        +------------------------------------------+
+                            |
+                            v
+             +-------------------------------+
+             | Translate using ST and LT     |
+             +-------------------------------+
+                            |
+                            v
+              +--------------------------------+
+              | Write to Machine Code File     |
+              +--------------------------------+
+                            |
+                            v
+                +-----------------------------+
+                | End of Intermediate Code?   |
+                +-----------------------------+
+                            | Yes
+                            v
+                          +--------+
+                          |  End   |
+                          +--------+
+```
+
+### 5. Conclusion
+The implementation of a two-pass assembler using the above structure effectively converts assembly language code into machine code in two distinct phases. Pass-I focuses on generating intermediate code and symbol tables, while Pass-II translates this intermediate representation into final machine code, ensuring efficient and correct assembly of the source program.

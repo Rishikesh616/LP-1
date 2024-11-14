@@ -1,0 +1,199 @@
+### 1. Objective
+The objective of this application is to connect a **temperature sensor** (such as **LM35** or **DHT11/DHT22**) to a **Raspberry Pi** or **BeagleBoard** circuit and write a program to read the ambient temperature. If the temperature crosses a predefined threshold value, an alert will be triggered by turning on an **LED**.
+
+### 2. Expected Output
+- The program will continuously read the temperature from the **sensor**.
+- If the temperature crosses a **threshold value**, the **LED** will turn on, indicating that the threshold has been exceeded.
+- If the temperature is below the threshold, the LED will remain off.
+- The program will output the temperature value and alert status on the terminal or serial monitor.
+
+### 3. Software Requirement
+- **For Raspberry Pi or BeagleBoard:**
+  - **Raspberry Pi OS** or **Linux-based OS** installed.
+  - **Python** for Raspberry Pi.
+  - **Libraries** such as `Adafruit_DHT` for DHT sensors or `w1thermsensor` for LM35.
+  
+- **For Arduino (if used):**
+  - **Arduino IDE**.
+  - **Temperature sensor** (LM35, DHT11, DHT22).
+  
+- **Hardware:**
+  - **Temperature sensor** (e.g., **LM35** for analog or **DHT11/DHT22** for digital).
+  - **LED** (for alert notification).
+  - **Raspberry Pi** or **BeagleBoard**.
+  - **Breadboard, jumper wires**, and resistors (for LED).
+
+### 4. Theory
+
+#### A. Necessary Concepts
+
+1. **Temperature Sensors**:
+   - **LM35**: An analog sensor that outputs a voltage proportional to the temperature (e.g., 10mV per °C). It can be connected directly to an ADC (Analog-to-Digital Converter) for reading the temperature on Raspberry Pi or BeagleBoard.
+   - **DHT11/DHT22**: Digital sensors that provide temperature and humidity data. The sensor communicates with the microcontroller or SBC (Single Board Computer) using a digital signal.
+
+2. **LED as an Output Device**:
+   - An **LED** will act as an alert system when the temperature exceeds the set threshold. The **Anode** of the LED will be connected to a GPIO pin, and the **Cathode** will be connected to ground through a current-limiting resistor (typically 220Ω).
+
+3. **GPIO Pins**:
+   - The **GPIO pins** on the Raspberry Pi or BeagleBoard will be used for reading the temperature sensor data (input) and controlling the LED (output).
+
+#### B. Algorithm and Explanation
+
+### Algorithm:
+1. Initialize the **GPIO** pins for controlling the LED and reading from the temperature sensor.
+2. Set a **threshold temperature** value that, when exceeded, will trigger the LED.
+3. Continuously read the temperature from the sensor.
+4. If the temperature exceeds the threshold, turn on the LED; otherwise, keep it off.
+5. Display the current temperature value and alert status.
+6. Repeat the process.
+
+### C. Flowchart
+
+```plaintext
++-----------------------------+
+| Start Application           |
++-----------------------------+
+           |
+           v
++-----------------------------+
+| Initialize GPIO pins        |
+| (Sensor and LED)            |
++-----------------------------+
+           |
+           v
++-----------------------------+
+| Read temperature from sensor|
++-----------------------------+
+           |
+           v
++-----------------------------+
+| Is temperature > threshold? |
++-----------------------------+
+   |           |
+   v           v
+Turn ON    Turn OFF
+LED        LED
+   |           |
+   v           v
+Repeat the process
+```
+
+### 5. Code Implementation
+
+#### For **Raspberry Pi** (Python) using **DHT11/DHT22** Sensor
+
+1. **Wiring Setup:**
+   - **DHT11/DHT22**: Connect **VCC** to 3.3V or 5V, **GND** to ground, and **DATA** to a GPIO pin (e.g., GPIO17).
+   - **LED**: Connect the **Anode** (long leg) to GPIO pin (e.g., GPIO18), and the **Cathode** (short leg) to ground through a 220Ω resistor.
+
+2. **Python Code for Raspberry Pi**:
+
+```python
+import Adafruit_DHT
+import RPi.GPIO as GPIO
+import time
+
+# Set the GPIO mode
+GPIO.setmode(GPIO.BCM)
+
+# Define GPIO pins
+DHT_PIN = 17  # GPIO pin where the DHT sensor is connected
+LED_PIN = 18   # GPIO pin where the LED is connected
+
+# Set up the LED pin as output
+GPIO.setup(LED_PIN, GPIO.OUT)
+
+# Set up the temperature sensor (DHT11 or DHT22)
+sensor = Adafruit_DHT.DHT22
+
+# Define the temperature threshold (e.g., 30°C)
+threshold_temperature = 30.0
+
+# Main loop
+try:
+    while True:
+        # Read temperature and humidity from the sensor
+        humidity, temperature = Adafruit_DHT.read_retry(sensor, DHT_PIN)
+
+        if temperature is not None:
+            print(f"Temperature: {temperature:.2f}°C")
+            
+            # Check if the temperature exceeds the threshold
+            if temperature > threshold_temperature:
+                GPIO.output(LED_PIN, GPIO.HIGH)  # Turn on LED
+                print("Alert! Temperature is above threshold. LED ON.")
+            else:
+                GPIO.output(LED_PIN, GPIO.LOW)   # Turn off LED
+                print("Temperature is within safe range. LED OFF.")
+        else:
+            print("Failed to retrieve data from sensor.")
+
+        # Wait before reading again
+        time.sleep(2)
+
+except KeyboardInterrupt:
+    print("Program terminated.")
+    GPIO.cleanup()
+```
+
+#### For **BeagleBoard** (Python) using **LM35** (Analog sensor)
+
+1. **Wiring Setup:**
+   - **LM35**: Connect **VCC** to 3.3V, **GND** to ground, and the **OUT** pin to an ADC pin on the BeagleBoard.
+   - **LED**: Connect the **Anode** to a GPIO pin (e.g., GPIO60), and the **Cathode** to ground through a 220Ω resistor.
+
+2. **Python Code for BeagleBoard**:
+
+For BeagleBoard, you would typically use **Analog-to-Digital Converter (ADC)** to read the analog voltage from the LM35 sensor.
+
+```python
+import Adafruit_BBIO.ADC as ADC
+import time
+import RPi.GPIO as GPIO
+
+# Set the GPIO mode
+GPIO.setmode(GPIO.BCM)
+
+# Define GPIO pins
+LED_PIN = 60    # GPIO pin where the LED is connected
+
+# Set up the LED pin as output
+GPIO.setup(LED_PIN, GPIO.OUT)
+
+# Set up the LM35 sensor (connected to an ADC pin)
+ADC.setup()
+LM35_PIN = "P9_40"  # ADC pin where the LM35 sensor is connected
+
+# Define the temperature threshold (e.g., 30°C)
+threshold_temperature = 30.0
+
+# Main loop
+try:
+    while True:
+        # Read the analog value from the LM35 sensor
+        sensor_value = ADC.read(LM35_PIN)
+
+        # Convert the sensor value to temperature (LM35: 10mV per °C)
+        voltage = sensor_value * 1.8  # Convert ADC value to voltage (0-1.8V)
+        temperature = voltage * 100  # Convert voltage to temperature in °C
+
+        print(f"Temperature: {temperature:.2f}°C")
+
+        # Check if the temperature exceeds the threshold
+        if temperature > threshold_temperature:
+            GPIO.output(LED_PIN, GPIO.HIGH)  # Turn on LED
+            print("Alert! Temperature is above threshold. LED ON.")
+        else:
+            GPIO.output(LED_PIN, GPIO.LOW)   # Turn off LED
+            print("Temperature is within safe range. LED OFF.")
+        
+        # Wait before reading again
+        time.sleep(2)
+
+except KeyboardInterrupt:
+    print("Program terminated.")
+    GPIO.cleanup()
+```
+
+### 6. Conclusion
+This application demonstrates how to connect a **temperature sensor** to a **Raspberry Pi** or **BeagleBoard** and read the temperature. The system continuously monitors the ambient temperature and activates an **LED alert** when the temperature exceeds a predefined threshold. The program allows for real-time temperature monitoring and can be adapted to other applications, such as environmental control systems or safety devices.
